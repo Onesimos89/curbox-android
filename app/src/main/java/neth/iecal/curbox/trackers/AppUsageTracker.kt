@@ -55,8 +55,14 @@ class AppUsageTracker {
         scope.launch {
             service.dataStoreManager.settings.collect { settings ->
                 val enabled = settings.isAppUsageTrackingEnabled
-                trackingEnabled = enabled
-                if (!enabled) mainHandler.post { discardCurrentSession() }
+                mainHandler.post {
+                    val wasEnabled = trackingEnabled
+                    trackingEnabled = enabled
+                    when {
+                        !enabled -> discardCurrentSession()
+                        !wasEnabled -> resumeForegroundApp()
+                    }
+                }
             }
         }
     }
