@@ -1445,6 +1445,8 @@
     <string name="export_keywords">Export Keywords</string>
     <string name="download_keyword_list">Download a keyword list</string>
     <string name="delete_group">Delete Group</string>
+    <string name="reducer_logs">Reducer logs</string>
+    <string name="intent_log">Intent log</string>
     <string name="advanced">Advanced</string>
 
     <!-- UIHider -->
