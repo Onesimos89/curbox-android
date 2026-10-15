@@ -68,6 +68,11 @@ class GrayScaleFilter : BaseBlocker() {
 
         lastPackageName = currentPackageName
 
+        if (currentPackageName == service.packageName) {
+            grayscaleControl.disableGrayscale(service)
+            return
+        }
+
         val now = Calendar.getInstance()
         val calDay = now.get(Calendar.DAY_OF_WEEK)
         // Monday=0, ..., Sunday=6 mapping (matches GrayscaleTimeSettingsFragment)
@@ -127,7 +132,6 @@ class GrayScaleFilter : BaseBlocker() {
         handler.postDelayed(scheduleChecker, 60_000L - System.currentTimeMillis() % 60_000L)
         ignoredGrayScalePackages = listOf(
             getCurrentKeyboardPackageName(service) ?: "com.google.android.inputmethod.latin",
-            service.packageName,
             "com.google.android.apps.wellbeing"
         )
         
