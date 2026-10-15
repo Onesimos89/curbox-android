@@ -97,10 +97,8 @@ class OnboardingPermissionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (!OnboardingState.canRestore(requireContext())) {
-            openMainScreen()
-            return
-        }
+        // Completed users also reach this screen when a required permission is lost.
+        // Restore eligibility must not prevent them from granting it again.
         setupRestore()
         binding.btnAction.setOnClickListener {
             if (completingSetup || backupViewModel.status.value == BackupViewModel.Status.WORKING) {
