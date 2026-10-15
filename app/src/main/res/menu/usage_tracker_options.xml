@@ -5,6 +5,9 @@
         android:checkable="true"
         android:title="@string/usage_weekly_usage" />
     <item
+        android:id="@+id/select_background_art"
+        android:title="@string/usage_select_background_art" />
+    <item
         android:id="@+id/select_ignored"
         android:title="@string/select_ignored_apps" />
     <item

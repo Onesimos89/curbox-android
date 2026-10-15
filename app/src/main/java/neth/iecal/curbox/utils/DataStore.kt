@@ -366,6 +366,10 @@ class DataStoreManager(private val context: Context) {
         updateGated(GatedSettingsField.GRAYSCALE_GROUPS) { newGroups }
     }
 
+    suspend fun updateUsageBackgroundArt(artName: String) {
+        settingsDataStore.updateData { it.copy(usageBackgroundArt = artName) }
+    }
+
     suspend fun updateUsageTrackerIgnoredApps(newApps: List<String>) {
         settingsDataStore.updateData { it.copy(usageTrackerIgnoredApps = newApps) }
     }
