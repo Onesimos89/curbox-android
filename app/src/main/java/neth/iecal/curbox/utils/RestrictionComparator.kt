@@ -130,9 +130,10 @@ object RestrictionComparator {
         val newUsage = if (newConfig.usage.isDailyUniform) List(7) { newConfig.usage.uniformLimit } else newConfig.usage.dailyLimits.toList()
         val oldCount = if (oldConfig.reelCount.isDailyUniform) List(7) { oldConfig.reelCount.uniformLimit } else oldConfig.reelCount.dailyLimits.toList()
         val newCount = if (newConfig.reelCount.isDailyUniform) List(7) { newConfig.reelCount.uniformLimit } else newConfig.reelCount.dailyLimits.toList()
+        // Reel intervals are allowed hours, so a stricter schedule must be a subset.
         return timeCoverageSameOrWider(
-            oldFor = { day -> if (oldConfig.schedule.isEveryday) oldConfig.schedule.everydayIntervals else oldConfig.schedule.dailyIntervals[day] ?: mutableListOf() },
-            newFor = { day -> if (newConfig.schedule.isEveryday) newConfig.schedule.everydayIntervals else newConfig.schedule.dailyIntervals[day] ?: mutableListOf() }
+            oldFor = { day -> if (newConfig.schedule.isEveryday) newConfig.schedule.everydayIntervals else newConfig.schedule.dailyIntervals[day] ?: mutableListOf() },
+            newFor = { day -> if (oldConfig.schedule.isEveryday) oldConfig.schedule.everydayIntervals else oldConfig.schedule.dailyIntervals[day] ?: mutableListOf() }
         ) && oldUsage.size == 7 && newUsage.size == 7 && oldCount.size == 7 && newCount.size == 7 &&
             newUsage.indices.all { newUsage[it] >= 0 && newUsage[it] <= oldUsage[it] } &&
             newCount.indices.all { newCount[it] >= 0 && newCount[it] <= oldCount[it] }

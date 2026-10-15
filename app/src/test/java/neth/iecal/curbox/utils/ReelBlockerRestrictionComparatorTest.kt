@@ -77,4 +77,25 @@ class ReelBlockerRestrictionComparatorTest {
             )
         )
     }
+    @Test
+    fun expandingAllowedHoursIsWeaker() {
+        val old = scheduledReels(9, 10)
+        val expanded = scheduledReels(0, 24)
+        assertFalse(RestrictionComparator.reelBlocker(old, expanded))
+        assertTrue(RestrictionComparator.reelBlocker(expanded, old))
+    }
+
+    @Test
+    fun movingAllowedHoursIsIncomparable() {
+        assertFalse(RestrictionComparator.reelBlocker(scheduledReels(9, 10), scheduledReels(10, 11)))
+    }
+
+    private fun scheduledReels(start: Int, end: Int) = ReelBlocker(
+        isActive = true,
+        config = neth.iecal.curbox.data.models.ReelBlockerConfig(
+            schedule = neth.iecal.curbox.data.models.ReelTimeConfig(
+                everydayIntervals = mutableListOf(neth.iecal.curbox.data.models.TimeInterval(start, 0, end, 0))
+            )
+        )
+    )
 }
