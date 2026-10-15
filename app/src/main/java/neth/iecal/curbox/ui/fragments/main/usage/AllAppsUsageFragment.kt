@@ -180,6 +180,10 @@ class AllAppsUsageFragment : Fragment() {
             binding.appUsageRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             binding.appUsageRecyclerView.adapter = adapter
 
+            binding.langowageLink.setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://langowage.site")))
+            }
+
 
             observeViewModel(adapter)
 

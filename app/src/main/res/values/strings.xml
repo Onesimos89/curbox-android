@@ -1777,4 +1777,7 @@
     <string name="unit_minutes">Minutes</string>
     <string name="unit_hours">Hours</string>
     <string name="unit_days">Days</string>
+    <string name="more_from_nethical">More from Nethical</string>
+    <string name="langowage_name">Langowage</string>
+    <string name="langowage_description">Learn Japanese in 60 second matches against other players</string>
 </resources>
