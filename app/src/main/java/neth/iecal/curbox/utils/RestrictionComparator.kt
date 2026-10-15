@@ -148,8 +148,28 @@ object RestrictionComparator {
             val n = new.find { it.groupId == o.groupId } ?: return@all false
             n.isActive &&
                 n.packages.containsAll(o.packages) &&
-                appTimeCoverageSameOrWider(o.timeConfig, n.timeConfig)
+                grayscaleTimeCoverageSameOrWider(o.timeConfig, n.timeConfig)
         }
+    }
+
+    private fun grayscaleTimeCoverageSameOrWider(old: AppTimeConfig, new: AppTimeConfig): Boolean {
+        fun intervalsFor(config: AppTimeConfig, day: Int): List<TimeInterval> {
+            val intervals = if (config.isEveryday) config.everydayIntervals
+                else config.dailyIntervals[day].orEmpty()
+            if (intervals.isEmpty()) return listOf(TimeInterval(0, 0, 24, 0))
+            // Grayscale evaluates both halves of overnight intervals on the selected day.
+            return intervals.flatMap { interval ->
+                val (start, end) = interval.toMinuteRange()
+                if (start > end) listOf(
+                    interval.copy(endHour = 24, endMinute = 0),
+                    interval.copy(startHour = 0, startMinute = 0)
+                ) else listOf(interval)
+            }
+        }
+        return timeCoverageSameOrWider(
+            oldFor = { intervalsFor(old, it) },
+            newFor = { intervalsFor(new, it) }
+        )
     }
 
     fun autoDndGroups(old: List<AutoDndGroup>, new: List<AutoDndGroup>): Boolean {
