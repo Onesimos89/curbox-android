@@ -73,7 +73,11 @@ class AppUsageTracker {
         }
         val foreground = activePackage ?: event.packageName?.toString() ?: return
 
-        if (foreground.isEmpty() || foreground == ownPackage || foreground in IGNORED_PACKAGES) return
+        if (foreground == ownPackage) {
+            endCurrentSession()
+            return
+        }
+        if (foreground.isEmpty() || foreground in IGNORED_PACKAGES) return
         if (foreground == currentPackage) return
 
         switchTo(foreground)
