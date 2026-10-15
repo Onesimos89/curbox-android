@@ -155,6 +155,19 @@ class DataStoreManager(private val context: Context) {
      */
     val settingsForEditing = settings.map(::overlayPendingChanges).flowOn(Dispatchers.Default)
 
+    suspend fun restoreSettingsDuringOnboarding(backup: Settings) {
+        OnboardingState.restore(context) {
+            val restored = SettingsBackupCodec.forDevice(
+                backup,
+                supportsUiHider = neth.iecal.curbox.BuildConfig.SUPPORTS_UI_HIDER,
+                supportsGrayscale = neth.iecal.curbox.BuildConfig.SUPPORTS_WRITE_SECURE_SETTINGS
+            )
+            settingsDataStore.updateData { restored }
+        }
+        schedulePendingChanges()
+        restoreDueTemporaryAppGroups()
+    }
+
     suspend fun updateAppGroups(newGroups: List<AppGroup>) {
         updateGated(GatedSettingsField.APP_GROUPS) { newGroups }
     }

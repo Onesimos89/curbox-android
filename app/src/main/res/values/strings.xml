@@ -1780,4 +1780,15 @@
     <string name="more_from_nethical">More from Nethical</string>
     <string name="langowage_name">Langowage</string>
     <string name="langowage_description">Learn Japanese in 60 second matches against other players</string>
+    <string name="backup_settings_title">Back up settings</string>
+    <string name="backup_settings_description">Save your settings and rules to a file. Usage history is not included. You can restore a backup only during setup.</string>
+    <string name="backup_save">Save backup</string>
+    <string name="backup_saved">Backup saved.</string>
+    <string name="backup_save_failed">Could not save the backup. Please choose a file and try again.</string>
+    <string name="backup_restore_title">Have a backup?</string>
+    <string name="backup_restore_intro">Restore your settings and rules before you finish setup. You cannot restore later.</string>
+    <string name="backup_restore_confirmation">This will replace your settings and rules. Usage history is not included. You will need to turn on uninstall protection again.</string>
+    <string name="backup_restored">Settings and rules restored.</string>
+    <string name="backup_restore_failed">Could not restore this file. Choose a valid Curbox settings backup and try again.</string>
+    <string name="onboarding_finish_failed">Could not finish setup. Please try again.</string>
 </resources>
