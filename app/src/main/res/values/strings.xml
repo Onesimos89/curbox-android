@@ -221,6 +221,7 @@
     <string name="total_this_week">TOTAL THIS WEEK</string>
     <string name="total_for_period">TOTAL · %1$s</string>
     <string name="usage_date_range">%1$s to %2$s</string>
+    <string name="usage_weekly_usage">Weekly usage</string>
     <string name="usage_daily_chart_description">Daily app usage chart</string>
     <string name="usage_weekly_chart_description">Weekly app usage chart</string>
     <string name="most_used">MOST USED</string>

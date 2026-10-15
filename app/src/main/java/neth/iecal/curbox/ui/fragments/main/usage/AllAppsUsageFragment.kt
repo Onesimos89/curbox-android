@@ -210,9 +210,19 @@ class AllAppsUsageFragment : Fragment() {
             binding.openMenu.setOnClickListener {
                 val popupMenu = PopupMenu(requireContext(), binding.openMenu)
                 popupMenu.menuInflater.inflate(R.menu.usage_tracker_options, popupMenu.menu)
+                popupMenu.menu.findItem(R.id.show_weekly_usage).isChecked =
+                    viewModel.chartScale.value == AppUsageChartScale.WEEKS
 
                 popupMenu.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
+                        R.id.show_weekly_usage -> {
+                            viewModel.setChartScale(
+                                if (item.isChecked) AppUsageChartScale.DAYS
+                                else AppUsageChartScale.WEEKS
+                            )
+                            true
+                        }
+
                         R.id.select_ignored -> {
                             lifecycleScope.launch(Dispatchers.IO) {
                                 val ignoredApps =
