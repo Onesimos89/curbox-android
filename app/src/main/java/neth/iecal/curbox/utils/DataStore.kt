@@ -9,6 +9,7 @@ import androidx.datastore.core.DataMigration
 import androidx.datastore.core.MultiProcessDataStoreFactory
 import androidx.datastore.core.Serializer
 import com.google.gson.Gson
+import com.google.gson.JsonParseException
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -31,6 +32,7 @@ import neth.iecal.curbox.data.models.upgradeLegacyConfig
 import neth.iecal.curbox.hardcoded.normalized
 import neth.iecal.curbox.services.TemporaryGroupDisableJob
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.reflect.Type
@@ -44,10 +46,11 @@ class GsonSerializer<T>(
 
     override suspend fun readFrom(input: InputStream): T {
         return try {
-            gson.fromJson(input.readBytes().decodeToString(), type) ?: defaultValue
-        } catch (e: Exception) {
-            e.printStackTrace()
-            defaultValue
+            gson.fromJson<T>(input.readBytes().decodeToString(), type)
+                ?: throw IOException("Settings file is empty or null")
+        } catch (e: JsonParseException) {
+            // A failed read must block updates, not replace the saved settings with defaults.
+            throw IOException("Unable to read settings", e)
         }
     }
 
