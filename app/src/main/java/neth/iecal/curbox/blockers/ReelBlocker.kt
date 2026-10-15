@@ -137,7 +137,9 @@ class ReelBlocker : BaseBlocker() {
     fun setupBlocker(service: BaseBlockingService) {
         this.service = service
 
-        notificationManager = TimerNotification(service, TIMER_NOTIFICATION_ID)
+        if (!this::notificationManager.isInitialized) {
+            notificationManager = TimerNotification(service, TIMER_NOTIFICATION_ID)
+        }
 
         settingsJob?.cancel()
         countJob?.cancel()

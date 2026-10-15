@@ -233,7 +233,9 @@ class AppBlocker : BaseBlocker() {
 
     fun setupAppBlocker(service: BaseBlockingService) {
         this.service = service
-        notificationManager = TimerNotification(service, TIMER_NOTIFICATION_ID)
+        if (!this::notificationManager.isInitialized) {
+            notificationManager = TimerNotification(service, TIMER_NOTIFICATION_ID)
+        }
         prefs = service.getSharedPreferences("app_blocker_prefs", Context.MODE_PRIVATE)
         usageStats = UsageStatsHelper(service)
         loadPersistedData()
