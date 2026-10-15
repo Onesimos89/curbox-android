@@ -135,9 +135,13 @@ object RestrictionComparator {
             oldFor = { day -> if (newConfig.schedule.isEveryday) newConfig.schedule.everydayIntervals else newConfig.schedule.dailyIntervals[day] ?: mutableListOf() },
             newFor = { day -> if (oldConfig.schedule.isEveryday) oldConfig.schedule.everydayIntervals else oldConfig.schedule.dailyIntervals[day] ?: mutableListOf() }
         ) && oldUsage.size == 7 && newUsage.size == 7 && oldCount.size == 7 && newCount.size == 7 &&
-            newUsage.indices.all { newUsage[it] >= 0 && newUsage[it] <= oldUsage[it] } &&
-            newCount.indices.all { newCount[it] >= 0 && newCount[it] <= oldCount[it] }
+            newUsage.indices.all { optionalLimitSameOrLower(oldUsage[it], newUsage[it]) } &&
+            newCount.indices.all { optionalLimitSameOrLower(oldCount[it].toLong(), newCount[it].toLong()) }
     }
+
+    // Zero disables reel limits rather than blocking every reel.
+    private fun optionalLimitSameOrLower(old: Long, new: Long): Boolean =
+        old >= 0L && new >= 0L && (old == 0L || new in 1..old)
 
     fun grayscaleGroups(old: List<GrayscaleGroup>, new: List<GrayscaleGroup>): Boolean {
         return old.filter { it.isActive }.all { o ->
