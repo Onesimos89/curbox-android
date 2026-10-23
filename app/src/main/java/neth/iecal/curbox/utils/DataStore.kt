@@ -1,5 +1,6 @@
 package neth.iecal.curbox.utils
 
+import neth.iecal.curbox.data.models.ExternalUnlockCondition
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
@@ -171,6 +172,29 @@ class DataStoreManager(private val context: Context) {
         restoreDueTemporaryAppGroups()
     }
 
+    suspend fun registerExternalUnlockCondition(condition: ExternalUnlockCondition) {
+        settingsDataStore.updateData { current ->
+            val existing = current.externalUnlockConditions.find {
+                it.packageName == condition.packageName && it.id == condition.id
+            }
+            require(existing == null || existing == condition) { "Condition ids are immutable" }
+            require(existing != null || current.externalUnlockConditions.count {
+                it.packageName == condition.packageName
+            } < 50) { "Too many conditions" }
+            if (existing != null) current else current.copy(
+                externalUnlockConditions = current.externalUnlockConditions + condition
+            )
+        }
+    }
+
+    suspend fun removeExternalUnlockCondition(packageName: String, id: String) {
+        settingsDataStore.updateData { current ->
+            current.copy(externalUnlockConditions = current.externalUnlockConditions.filterNot {
+                it.packageName == packageName && it.id == id
+            })
+        }
+    }
+
     suspend fun updateAppGroups(newGroups: List<AppGroup>) {
         updateGated(GatedSettingsField.APP_GROUPS) { newGroups }
     }
@@ -241,6 +265,7 @@ class DataStoreManager(private val context: Context) {
                 mindfulMessageConfig = current.mindfulMessageConfig,
                 uiHiderConfig = current.uiHiderConfig,
                 nextWebsiteRecheckTime = current.nextWebsiteRecheckTime,
+                externalUnlockConditions = current.externalUnlockConditions,
                 settingsChangeDelayConfig2 = delayConfig,
             )
 
@@ -294,9 +319,13 @@ class DataStoreManager(private val context: Context) {
         focusGroupId: String,
         durationInMs: Long,
         pomodoroState: PomodoroState = PomodoroState(),
-        endTimeInMillis: Long = System.currentTimeMillis() + durationInMs
+        endTimeInMillis: Long = System.currentTimeMillis() + durationInMs,
+        requireExitableSession: Boolean = false
     ) {
         settingsDataStore.updateData {
+            require(!requireExitableSession || neth.iecal.curbox.api.ApiRestrictionPolicy.canReplaceFocus(
+                it, System.currentTimeMillis()
+            )) { "The active focus session cannot be ended early" }
             it.copy(
                 activeManualFocusGroupId = Pair(focusGroupId, endTimeInMillis),
                 activePomodoroState = pomodoroState.normalized()
@@ -336,8 +365,11 @@ class DataStoreManager(private val context: Context) {
         return updated.takeIf { advanced }
     }
 
-    suspend fun setManualFocusStateToInactive() {
+    suspend fun setManualFocusStateToInactive(requireExitableSession: Boolean = false) {
         settingsDataStore.updateData {
+            require(!requireExitableSession || neth.iecal.curbox.api.ApiRestrictionPolicy.canReplaceFocus(
+                it, System.currentTimeMillis()
+            )) { "The active focus session cannot be ended early" }
             it.copy(
                 activeManualFocusGroupId = Pair(null, 0L),
                 activePomodoroState = PomodoroState()

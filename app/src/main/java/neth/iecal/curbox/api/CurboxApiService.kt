@@ -8,6 +8,8 @@ import android.os.IBinder
 import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * The exported bound service other apps talk to, like Shizuku's service. A client binds this and
@@ -20,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 class CurboxApiService : Service() {
 
     private val gson = Gson()
+    private val commandMutex = Mutex()
 
     private val binder = object : ICurboxApi.Stub() {
 
@@ -31,10 +34,27 @@ class CurboxApiService : Service() {
             if (!callerAllowed()) return CurboxApiContract.STATUS_DENIED
             if (ApiCommand.fromNameOrNull(command) == null) return CurboxApiContract.STATUS_UNKNOWN_COMMAND
             return try {
-                val applied = runBlocking {
-                    CurboxApiCommands.runCommand(applicationContext, command, args ?: Bundle())
+                // Capture Binder identity before entering any coroutine.
+                val callerPackages = packageManager.getPackagesForUid(Binder.getCallingUid()).orEmpty()
+                val requestedPackage = args?.getString("provider_package")
+                val callerPackage = callerPackages.firstOrNull {
+                    (requestedPackage == null || requestedPackage == it) &&
+                        ApiAuthStore.isAnyGranted(applicationContext, arrayOf(it))
+                } ?: return CurboxApiContract.STATUS_DENIED
+                val revision = ApiAuthStore.revision(applicationContext)
+                runBlocking {
+                    commandMutex.withLock {
+                        if (revision != ApiAuthStore.revision(applicationContext) ||
+                            !ApiAuthStore.isAnyGranted(applicationContext, arrayOf(callerPackage))) {
+                            CurboxApiContract.STATUS_DENIED
+                        } else {
+                            val applied = CurboxApiCommands.runCommand(
+                                applicationContext, command, args ?: Bundle(), callerPackage
+                            )
+                            if (applied) CurboxApiContract.STATUS_OK else CurboxApiContract.STATUS_FAILED
+                        }
+                    }
                 }
-                if (applied) CurboxApiContract.STATUS_OK else CurboxApiContract.STATUS_FAILED
             } catch (e: Exception) {
                 Log.e(TAG, "execute failed for $command", e)
                 CurboxApiContract.STATUS_FAILED

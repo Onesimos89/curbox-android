@@ -311,6 +311,10 @@ object RestrictionComparator {
         // Message and typing sentence wording never change how strong the block is
         if (o.copy(message = listOf(), typingSentence = "") == n.copy(message = listOf(), typingSentence = "")) return true
 
+        // Different providers or conditions cannot be compared for restriction strength.
+        if (o.externalUnlockCondition != null &&
+            o.externalUnlockCondition != n.externalUnlockCondition) return false
+
         val onEachOpenOk = !o.isOnOpenConfig || n.isOnOpenConfig
         val cooldownOk = n.isOnOpenConfig || n.timeInterval <= o.timeInterval
         val dynamicIntervalOk = n.isOnOpenConfig ||

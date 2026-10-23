@@ -36,6 +36,7 @@ data class AppBlockerWarningScreenConfig(
     val focusGoalRequiredMinutes: Int = 60,
     /** For app groups, grant access only for the current selected-app session. */
     val isOnOpenConfig: Boolean = false,
+    val externalUnlockCondition: ExternalUnlockCondition? = null,
 )
 
 class WarningMessagesAdapter : TypeAdapter<List<String>>() {

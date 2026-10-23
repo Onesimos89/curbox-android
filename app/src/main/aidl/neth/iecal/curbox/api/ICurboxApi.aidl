@@ -20,7 +20,7 @@ interface ICurboxApi {
 
     // Lists things Curbox knows about, so a client can discover ids before acting on them.
     // kind is one of FOCUS_GROUPS, APP_BLOCKER_GROUPS, KEYWORD_GROUPS, GRAYSCALE_GROUPS,
-    // AUTO_DND_GROUPS, UI_HIDER_SCRIPTS or STATUS. Returns a JSON array (or object for STATUS),
+    // AUTO_DND_GROUPS, UI_HIDER_SCRIPTS, UNLOCK_CONDITIONS (v3) or STATUS. Returns a JSON array (or object for STATUS),
     // or null when not allowed or the kind is unknown.
     String list(String kind);
 }

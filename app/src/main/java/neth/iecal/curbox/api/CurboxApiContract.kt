@@ -9,7 +9,7 @@ package neth.iecal.curbox.api
  */
 object CurboxApiContract {
 
-    const val API_VERSION = 2
+    const val API_VERSION = 3
 
     // Argument keys placed in the Bundle passed to execute().
     const val ARG_TARGET = "target"
@@ -31,6 +31,8 @@ object CurboxApiContract {
 
 /** Actions a client can run through execute(). Each command's args are documented in CURBOX_API.md. */
 enum class ApiCommand {
+    REGISTER_UNLOCK_CONDITION,
+    REMOVE_UNLOCK_CONDITION,
     START_FOCUS,
     STOP_FOCUS,
     SET_APP_BLOCKER_GROUP,
@@ -64,6 +66,7 @@ enum class ApiState {
  * active focus session.
  */
 enum class ApiList {
+    UNLOCK_CONDITIONS,
     FOCUS_GROUPS,
     APP_BLOCKER_GROUPS,
     KEYWORD_GROUPS,

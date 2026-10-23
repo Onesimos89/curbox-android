@@ -207,8 +207,7 @@ class AppBlocker : BaseBlocker() {
             .forEach(::removeCooldownFrom)
     }
 
-    // THIS IS EXPORTED HERE INTENTIONALLY. THE APPBLOCKER SERVICE RUNS IN A DIFFERENT PROCESS THAN
-    // THE MAIN UI.
+    // All senders are in this app, including its other processes (the same UID).
     fun setupReceivers() {
         val filter = IntentFilter().apply {
             addAction(INTENT_ACTION_REFRESH_APP_BLOCKER)
@@ -219,7 +218,7 @@ class AppBlocker : BaseBlocker() {
             service,
             refreshReceiver,
             filter,
-            ContextCompat.RECEIVER_EXPORTED
+            ContextCompat.RECEIVER_NOT_EXPORTED
         )
     }
 

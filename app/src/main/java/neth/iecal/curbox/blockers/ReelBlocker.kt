@@ -1,12 +1,10 @@
 package neth.iecal.curbox.blockers
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Context.RECEIVER_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
+import androidx.core.content.ContextCompat
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import com.google.gson.Gson
@@ -180,17 +178,14 @@ class ReelBlocker : BaseBlocker() {
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     fun setupReceivers(){
         val filter = IntentFilter().apply {
             addAction(INTENT_ACTION_REFRESH_REEL_BLOCKER)
             addAction(INTENT_ACTION_REFRESH_REEL_BLOCKER_COOLDOWN)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            service.registerReceiver(refreshReceiver, filter, RECEIVER_EXPORTED)
-        } else {
-            service.registerReceiver(refreshReceiver, filter)
-        }
+        ContextCompat.registerReceiver(
+            service, refreshReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     fun removeReceivers(){

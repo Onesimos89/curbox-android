@@ -19,6 +19,7 @@ import neth.iecal.curbox.utils.DataStoreManager
 import neth.iecal.curbox.utils.DndHelper
 import neth.iecal.curbox.utils.TimeTools
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.CancellationException
 
 /**
  * Turns an API command into a real change in Curbox.
@@ -32,7 +33,7 @@ object CurboxApiCommands {
     private const val TAG = "CurboxApi"
 
     /** Runs an action command. Returns true if it was understood and applied. */
-    suspend fun runCommand(context: Context, commandName: String?, args: Bundle): Boolean {
+    suspend fun runCommand(context: Context, commandName: String?, args: Bundle, callerPackage: String): Boolean {
         val command = ApiCommand.fromNameOrNull(commandName) ?: return false
         val target = args.getString(CurboxApiContract.ARG_TARGET).orEmpty()
         val enable = args.getBoolean(CurboxApiContract.ARG_ENABLE, true)
@@ -43,6 +44,10 @@ object CurboxApiCommands {
 
         return try {
             when (command) {
+                ApiCommand.REGISTER_UNLOCK_CONDITION -> ExternalUnlockProviders.register(app, callerPackage, args)
+                ApiCommand.REMOVE_UNLOCK_CONDITION -> dataStore.removeExternalUnlockCondition(
+                    callerPackage, args.getString("id").orEmpty()
+                )
                 ApiCommand.START_FOCUS -> startFocus(app, dataStore, target, minutes)
                 ApiCommand.STOP_FOCUS -> stopFocus(app, dataStore)
                 ApiCommand.SET_APP_BLOCKER_GROUP -> setAppBlockerGroup(app, dataStore, target, enable)
@@ -58,6 +63,8 @@ object CurboxApiCommands {
                 ApiCommand.SET_DND -> DndHelper.applyDndState(app, enable)
             }
             true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Failed to run command $command", e)
             false
@@ -70,6 +77,9 @@ object CurboxApiCommands {
 
     private suspend fun startFocus(context: Context, dataStore: DataStoreManager, groupId: String, minutes: Int) {
         val settings = dataStore.settings.first()
+        require(ApiRestrictionPolicy.canReplaceFocus(settings, System.currentTimeMillis())) {
+            "The active focus session cannot be ended early"
+        }
         val group = requireNotNull(settings.manualFocusGroups.firstOrNull { it.groupId == groupId }) {
             "Unknown focus group: $groupId"
         }
@@ -77,6 +87,12 @@ object CurboxApiCommands {
         val now = System.currentTimeMillis()
         val endTimeInMillis = now + durationMs
 
+        dataStore.setManualFocusStateToActive(
+            group.groupId,
+            durationMs,
+            endTimeInMillis = endTimeInMillis,
+            requireExitableSession = true
+        )
         val statsDao = AppDatabase.getInstance(context).focusStatsDao()
         statsDao.insert(
             FocusStatsEntity(
@@ -87,22 +103,21 @@ object CurboxApiCommands {
                 status = 0
             )
         )
-        dataStore.setManualFocusStateToActive(
-            group.groupId,
-            durationMs,
-            endTimeInMillis = endTimeInMillis
-        )
         broadcast(context, FocusModeBlocker.INTENT_ACTION_REFRESH_FOCUS_MODE)
     }
 
     private suspend fun stopFocus(context: Context, dataStore: DataStoreManager) {
+        require(ApiRestrictionPolicy.canReplaceFocus(dataStore.settings.first(), System.currentTimeMillis())) {
+            "The active focus session cannot be ended early"
+        }
         val statsDao = AppDatabase.getInstance(context).focusStatsDao()
         val now = System.currentTimeMillis()
-        for (session in statsDao.getRunningSessions()) {
+        val sessions = statsDao.getRunningSessions()
+        dataStore.setManualFocusStateToInactive(requireExitableSession = true)
+        for (session in sessions) {
             val actEnd = if (session.estimatedEndTimeInMillis < now) session.estimatedEndTimeInMillis else now
             statsDao.update(session.copy(status = 1, actualEndTimeInMillis = actEnd))
         }
-        dataStore.setManualFocusStateToInactive()
         broadcast(context, FocusModeBlocker.INTENT_ACTION_REFRESH_FOCUS_MODE)
     }
 
@@ -215,6 +230,10 @@ object CurboxApiCommands {
         val settings = DataStoreManager(app).settings.first()
 
         return when (kind) {
+            ApiList.UNLOCK_CONDITIONS -> settings.externalUnlockConditions.filter {
+                ExternalUnlockProviders.isAvailable(app, it)
+            }
+
             ApiList.FOCUS_GROUPS -> settings.manualFocusGroups.map { g ->
                 linkedMapOf(
                     "id" to g.groupId,
